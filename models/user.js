@@ -2,6 +2,12 @@ const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
 
 const UserSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        require: true,
+        minLength: 5,
+        maxLength: 255
+    },
     username: {
         type: String,
         require: true,
@@ -13,7 +19,7 @@ const UserSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['admin', 'faculty', 'employee'],
+        enum: ['admin', 'faculty', 'employee', 'student'],
         default: 'employee'
     }
 })
@@ -26,7 +32,7 @@ UserSchema.pre('save', async function(next){
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(user.password, salt);
     user.password = hash;
-    next();
+    return next();
 })
 
 UserSchema.methods.comparePassword = async function(candidatePassword){
