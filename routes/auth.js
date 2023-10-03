@@ -5,8 +5,8 @@ const User = require('../models/user')
 const Joi = require('joi')
 
 const registerSchema = Joi.object({
-    name: Joi.string().required(),
-    username: Joi.string().required(),
+    name: Joi.string().required().min(3),
+    username: Joi.string().required().min(3),
     password: Joi.string().min(6).required(),
     role: Joi.string()
 })
@@ -41,13 +41,18 @@ router.post('/register', async (req, res) => {
         const { name, username, password, role } = req.body;
 
         try {
-            const user = new User({ name, username, password, role });
+            let user = await User.findOne({ username: req.body.username })
+            if(user){
+                return res.status(400).json({message: "User already registered." })
+            }
+            user = new User({ name, username, password, role });
             await user.save();
 
             const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
 
             res.json({ token, role: user.role, name: user.name });
         } catch (error) {
+            console.log(error)
             res.status(400).json({ message: 'Registration Failed. Please Try Again.', code: error.code });
         }
     }catch(error){
